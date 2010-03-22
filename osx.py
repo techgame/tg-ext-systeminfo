@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##
 ##~ Copyright (C) 2002-2010  TechGame Networks, LLC.              ##
 ##~                                                               ##
@@ -28,12 +29,10 @@ ctlNamesDefault = [
     'hw.memsize', 'hw.usermem',
     'hw.pagesize', 'hw.cachelinesize',
 
-    'hw.byteorder',
-    'hw.l1dcachesize', 'hw.l1icachesize',
-    'hw.l2cachesize', 'hw.l3cachesize',
+    'hw.l1dcachesize', 'hw.l1icachesize', 'hw.l2cachesize', 
 
     'hw.ncpu', 'hw.physicalcpu', 'hw.logicalcpu', 'hw.packages',
-    'hw.cputype', 'hw.cpusubtype', 'hw.cputhreadtype',
+    'hw.cputype', 'hw.cpusubtype', 
 
     'hw.cpufrequency', 'hw.tbfrequency', 'hw.busfrequency', ]
 
@@ -78,4 +77,47 @@ def iterQuerySysCtl(ctlNames=None):
 def querySysCtl(ctlNames=None):
     return dict(iterQuerySysCtl(ctlNames))
 
-print querySysCtl()
+def getSystemInfo_osx():
+    ns = querySysCtl()
+
+    r = {
+      'misc': {
+        'machineModel': ns['hw.model'],
+        'timebaseFrequency': ns['hw.tbfrequency'],
+        'busFrequency': ns['hw.busfrequency'],
+        'cpuFrequency': ns['hw.cpufrequency'],
+        },
+
+      'memory': {
+        'total': ns['hw.memsize'],
+        'user': ns['hw.usermem'],
+
+        'L1_D': ns['hw.l1dcachesize'],
+        'L1_I': ns['hw.l1icachesize'],
+        'L2': ns['hw.l2cachesize'],
+
+        'pageSize': ns['hw.pagesize'],
+        'cacheLineSize': ns['hw.cachelinesize'],
+        },
+
+      'cpu': {
+        'ncpu': ns['hw.ncpu'],
+        'physical': ns['hw.physicalcpu'],
+        'logical': ns['hw.logicalcpu'],
+        'packages': ns['hw.packages'],
+
+        'cputype': ns['hw.cputype'],
+        'cpusubtype': ns['hw.cpusubtype'],
+        },}
+    return r
+
+getSystemInfo = getSystemInfo_osx
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~ Main 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+if __name__=='__main__':
+    from pprint import pprint
+    pprint(getSystemInfo())
+
