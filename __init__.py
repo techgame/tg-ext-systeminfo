@@ -10,9 +10,13 @@
 #~ Imports 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-import os, sys
+import sys
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#~ Definitions 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+if sys.platform in ['darwin']:
+    from . import darwin
+    from .darwin import gatherSystemInfo, gatherSystemInfo_darwin
+
+elif sys.platform in ['win32']:
+    from . import win32
+    from .win32 import gatherSystemInfo, gatherSystemInfo_win32
 

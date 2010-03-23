@@ -12,6 +12,7 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 import os, sys
+import platform
 
 import ctypes
 from ctypes.util import find_library
@@ -77,11 +78,11 @@ def iterQuerySysCtl(ctlNames=None):
 def querySysCtl(ctlNames=None):
     return dict(iterQuerySysCtl(ctlNames))
 
-def getSystemInfo_osx():
+def gatherSystemInfo_darwin():
     ns = querySysCtl()
 
     r = {
-      'misc': {
+      'hwmisc': {
         'machineModel': ns['hw.model'],
         'timebaseFrequency': ns['hw.tbfrequency'],
         'busFrequency': ns['hw.busfrequency'],
@@ -108,10 +109,15 @@ def getSystemInfo_osx():
 
         'cputype': ns['hw.cputype'],
         'cpusubtype': ns['hw.cpusubtype'],
-        },}
+        },
+      'platform': {
+        'platform': platform.platform(),
+        'version': platform.mac_ver()[0], 
+        },
+    }
     return r
 
-getSystemInfo = getSystemInfo_osx
+gatherSystemInfo = gatherSystemInfo_darwin
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Main 
@@ -119,5 +125,5 @@ getSystemInfo = getSystemInfo_osx
 
 if __name__=='__main__':
     from pprint import pprint
-    pprint(getSystemInfo())
+    pprint(gatherSystemInfo())
 

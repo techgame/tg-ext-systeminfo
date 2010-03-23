@@ -70,13 +70,11 @@ def GlobalMemoryStatusEx():
     if _GlobalMemoryStatusEx(byref(ms)):
         return ms
 
-def getSystemInfo_win32():
+def gatherSystemInfo_win32():
     ms = GlobalMemoryStatusEx()
     si = GetSystemInfo()
 
     r = {
-      'misc': {},
-
       'memory': {
         'total': ms.ullTotalPhys,
         'available': ms.ullAvailPhys,
@@ -91,10 +89,15 @@ def getSystemInfo_win32():
         'cputype': si.dwProcessorType,
         'cpurevision': si.wProcessorRevision,
         'cpulevel': si.wProcessorLevel,
-        },}
+        },
+      'platform': {
+        'platform': platform.platform(),
+        'version': platform.win32_ver()[0],
+        },
+    }
     return r
 
-getSystemInfo = getSystemInfo_win32
+gatherSystemInfo = gatherSystemInfo_win32
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #~ Main 
@@ -102,5 +105,5 @@ getSystemInfo = getSystemInfo_win32
 
 if __name__=='__main__':
     from pprint import pprint
-    pprint(getSystemInfo())
+    pprint(gatherSystemInfo())
 
