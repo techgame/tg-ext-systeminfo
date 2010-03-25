@@ -20,3 +20,5 @@ elif sys.platform in ['win32']:
     from . import win32
     from .win32 import gatherSystemInfo, gatherSystemInfo_win32
 
+from .dataRecorder import FlightDataRecorder
+
