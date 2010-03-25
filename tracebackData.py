@@ -65,7 +65,7 @@ class TracebackDataEntry(object):
         return ''.join(r)
 
     def fixupTBEntry(self, tbe):
-        fn = tbe[0].split(systemPrefix)[-1]
+        fn = tbe[0].split(self.systemPrefix)[-1]
         fn = fn.replace('\\', '/')
         return (fn,)+tbe[1:]
 
