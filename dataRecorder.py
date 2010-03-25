@@ -114,13 +114,14 @@ class FlightDataRecorder(object):
         self._next_excepthook = sys.excepthook
         sys.excepthook = self.exceptHook
 
-    def addSystemInfo(self, si=None):
-        if si is None:
-            si = self._gatherSystemInfo()
+    def addSystemInfo(self):
+        si = self._gatherSystemInfo()
+        return self.addInfo(si)
 
+    def addInfo(self, info):
         node = self.nodeid
         with self.db as db:
-            for k,v in self._iterFlatNS(si):
+            for k,v in self._iterFlatNS(info):
                 db.execute(
                     'replace into flightDataInfo \n'
                     '  values (?, ?, ?)', (node, k, v))
