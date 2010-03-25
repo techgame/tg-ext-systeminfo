@@ -12,6 +12,7 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 import os, sys
+import platform
 
 import ctypes
 from ctypes.util import find_library
