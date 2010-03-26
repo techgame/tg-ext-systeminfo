@@ -14,6 +14,7 @@ from __future__ import with_statement
 
 import os, sys, time
 import traceback
+import hashlib
 
 try: import json
 except ImportError:
@@ -76,7 +77,7 @@ class TracebackDataEntry(object):
     def getExceptionRecord(self, **rec):
         rec.update(
             exc_type=self.exc_type, 
-            exc_msg=self.exc,
+            exc_msg=''.join(self.exc),
             exc_tb=self.tb,
             exc_ts=self.ts, 
             exc_ts0=self.ts0,)
@@ -89,7 +90,7 @@ class TracebackDataEntry(object):
         exc_tb = rec.pop('exc_tb')
         exc_tb = [self.fixupTBEntry(tbe) for tbe in exc_tb]
         # encode it as json, so it's easy to manipulate
-        exc_tb = json.encodes(self.tb, True, 
+        exc_tb = json.dumps(self.tb, True, 
             sort_keys=True, indent=2, separators=(',',':'))
 
         # now hash the exception message and the traceback 
