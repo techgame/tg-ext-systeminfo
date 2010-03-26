@@ -90,7 +90,7 @@ class TracebackDataEntry(object):
         exc_tb = rec.pop('exc_tb')
         exc_tb = [self.fixupTBEntry(tbe) for tbe in exc_tb]
         # encode it as json, so it's easy to manipulate
-        exc_tb = json.dumps(self.tb, True, 
+        exc_tb = json.dumps(exc_tb, True, 
             sort_keys=True, indent=2, separators=(',',':'))
 
         # now hash the exception message and the traceback 
