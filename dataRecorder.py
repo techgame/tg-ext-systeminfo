@@ -15,6 +15,7 @@ from __future__ import with_statement
 import os, sys
 import uuid
 import sqlite3
+from contextlib import contextmanager
 
 from . import gatherSystemInfo
 from .tracebackData import TracebackDataEntry
@@ -46,31 +47,45 @@ def iterFlatNS(ns):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class FlightDataRecorder(object):
-    db = None
     nodeid = uuid.getnode()
+    dbname = None
 
     def __init__(self, path=None):
-        self.open(path)
+        self.openDB(path)
         
     def getDefaultPath(self):
         return os.path.join(sys.exec_prefix, 'flightData.db')
 
-    def open(self, path=None):
+    def openDB(self, path=None):
         if path is None:
-            path = self.getDefaultPath()
+            path = self.dbname or self.getDefaultPath()
+        else: self.dbname = None
 
         if isinstance(path, basestring):
             db = sqlite3.connect(path, detect_types=sqlite3.PARSE_DECLTYPES)
-            self.db = db
-            self._initSqliteDb(db)
         elif not hasattr(path, 'executemany'):
             raise TypeError("Expected a valid path or a db2api compatible DB")
         else: 
             db = path
             path = None
 
-        self.db = db
-        self._initDbTables(db)
+        if self.dbname is None:
+            self._initSqliteDb(db)
+            self._initDbTables(db)
+
+        return db
+
+    @contextmanager
+    def usingDB(self):
+        if self.dbname is None:
+            raise RuntimeError("DBName is not initialized. Call openDB first.")
+
+        db = sqlite3.connect(self.dbname, detect_types=sqlite3.PARSE_DECLTYPES)
+        try:
+            with db:
+                yield db
+        finally:
+            db.close()
 
     def _initSqliteDb(self, db):
         db.row_factory = sqlite3.Row
@@ -105,9 +120,6 @@ class FlightDataRecorder(object):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def install(self, bAddInfo=True):
-        if self.db is None:
-            self.open()
-
         if bAddInfo:
             self.addSystemInfo()
 
@@ -120,7 +132,7 @@ class FlightDataRecorder(object):
 
     def addInfo(self, info):
         node = self.nodeid
-        with self.db as db:
+        with self.usingDB() as db:
             for k,v in self._iterFlatNS(info):
                 db.execute(
                     'replace into flightDataInfo \n'
@@ -134,7 +146,7 @@ class FlightDataRecorder(object):
         print >> sys.stderr, tde
 
         rec = tde.getJsonExceptionRecord(node=self.nodeid)
-        with self.db as db:
+        with self.usingDB() as db:
             db.execute(
                 'insert or ignore into flightDataExceptionTable\n'
                 '  values (:exc_hash, :exc_hashPartial, :exc_type, :exc_msg, :exc_tb)', rec)
