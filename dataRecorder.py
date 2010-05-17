@@ -143,7 +143,7 @@ class FlightDataRecorder(object):
 
     def exceptHook(self, etype, evalue, etb):
         tde = TracebackDataEntry(etype, evalue, etb)
-        print >> sys.stderr, tde
+        #print >> sys.stderr, tde
 
         rec = tde.getJsonExceptionRecord(node=self.nodeid)
         with self.usingDB() as db:
@@ -153,4 +153,6 @@ class FlightDataRecorder(object):
             db.execute(
                 'insert into flightDataExceptionLog\n'
                 '  values (:node, :exc_hash, :exc_type, :exc_msg, :exc_ts, :exc_ts0)', rec)
+
+        return self._next_excepthook(etype, evalue, etb)
 
