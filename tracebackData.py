@@ -88,7 +88,8 @@ class TracebackDataEntry(object):
 
         # normalize the traceback so the hash has meaning
         exc_tb = rec.pop('exc_tb')
-        exc_tb = [self.fixupTBEntry(tbe) for tbe in exc_tb]
+        if exc_tb is not None:
+            exc_tb = [self.fixupTBEntry(tbe) for tbe in exc_tb]
         # encode it as json, so it's easy to manipulate
         exc_tb = json.dumps(exc_tb, True, 
             sort_keys=True, indent=2, separators=(',',':'))
