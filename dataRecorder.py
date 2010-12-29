@@ -62,7 +62,9 @@ class FlightDataRecorder(object):
         else: self.dbname = None
 
         if isinstance(path, basestring):
-            db = sqlite3.connect(path, detect_types=sqlite3.PARSE_DECLTYPES)
+            db = sqlite3.connect(path, 
+                    check_same_thread=False,
+                    detect_types=sqlite3.PARSE_DECLTYPES)
         elif not hasattr(path, 'executemany'):
             raise TypeError("Expected a valid path or a db2api compatible DB")
         else: 
@@ -80,7 +82,9 @@ class FlightDataRecorder(object):
         if self.dbname is None:
             raise RuntimeError("DBName is not initialized. Call openDB first.")
 
-        db = sqlite3.connect(self.dbname, detect_types=sqlite3.PARSE_DECLTYPES)
+        db = sqlite3.connect(self.dbname, 
+                check_same_thread=False,
+                detect_types=sqlite3.PARSE_DECLTYPES)
         try:
             with db:
                 yield db
