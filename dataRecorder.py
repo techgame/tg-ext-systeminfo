@@ -112,14 +112,32 @@ class FlightDataRecorder(object):
                     exc_msg TEXT,
                     exc_tb TEXT);''')
             db.execute('''
-                create table if not exists flightDataExceptionLog (
+                create table if not exists flightDataExceptionLog2 (
                     nodeId INTEGER,
                     exc_hash TEXT,
-                    exc_type TEXT,
-                    exc_msg TEXT,
                     exc_ts INTEGER,
                     exc_ts0 INTEGER,
-                    primary key (nodeId, exc_hash) on conflict replace);''')
+                    primary key (nodeId, exc_hash, exc_ts));''')
+            db.execute('''
+                create view if not exists flightDataExceptionLogView as 
+                    select 
+                        exc_type, exc_msg, exc_tb, 
+                        datetime(log.exc_ts, 'unixepoch'), log.exc_ts0
+                    from flightDataExceptionTable join
+                        flightDataExceptionLog2 as log using (exc_hash)
+                    order by log.exc_ts, log.exc_ts0, log.nodeId;''')
+
+            db.execute('''
+                create view if not exists flightDataExceptions as 
+                    select exc_type, exc_msg, exc_tb, occurances, datetime(ts_first, 'unixepoch'), datetime(ts_last, 'unixepoch')
+                    from flightDataExceptionTable 
+                        join (select exc_hash, count(*) as occurances, 
+                                min(exc_ts) as ts_first, max(exc_ts) as ts_last
+                            from flightDataExceptionLog2 group by exc_hash)
+                        using (exc_hash)
+                    order by exc_type, exc_msg;
+                    ''')
+
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -155,8 +173,8 @@ class FlightDataRecorder(object):
                 'insert or ignore into flightDataExceptionTable\n'
                 '  values (:exc_hash, :exc_hashPartial, :exc_type, :exc_msg, :exc_tb)', rec)
             db.execute(
-                'insert into flightDataExceptionLog\n'
-                '  values (:node, :exc_hash, :exc_type, :exc_msg, :exc_ts, :exc_ts0)', rec)
+                'insert into flightDataExceptionLog2\n'
+                '  values (:node, :exc_hash, :exc_ts, :exc_ts0)', rec)
 
         return self._next_excepthook(etype, evalue, etb)
 
