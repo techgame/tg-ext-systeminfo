@@ -105,35 +105,32 @@ class FlightDataRecorder(object):
                     value TEXT,
                     primary key (nodeId, key) on conflict replace);''')
             db.execute('''
-                create table if not exists flightDataExceptionTable (
-                    exc_hash TEXT primary key on conflict ignore, 
-                    exc_hashPartial TEXT,
-                    exc_type TEXT,
-                    exc_msg TEXT,
-                    exc_tb TEXT);''')
-            db.execute('''
-                create table if not exists flightDataExceptionLog2 (
+                create table if not exists flightDataExceptionLog3 (
                     nodeId INTEGER,
                     exc_hash TEXT,
                     exc_ts INTEGER,
-                    exc_ts0 INTEGER,
-                    primary key (nodeId, exc_hash, exc_ts));''')
+                    exc_ts0 INTEGER);''')
             db.execute('''
-                create view if not exists flightDataExceptionLogView as 
+                create index if not exists idx_flightDataExceptionLog3 
+                    on flightDataExceptionLog3 (exc_hash);''')
+            db.execute('''drop view if exists flightDataExceptionLogView;''')
+            db.execute('''
+                create view flightDataExceptionLogView as 
                     select 
                         exc_type, exc_msg, exc_tb, 
                         datetime(log.exc_ts, 'unixepoch'), log.exc_ts0
                     from flightDataExceptionTable join
-                        flightDataExceptionLog2 as log using (exc_hash)
+                        flightDataExceptionLog3 as log using (exc_hash)
                     order by log.exc_ts, log.exc_ts0, log.nodeId;''')
 
+            db.execute('''drop view if exists flightDataExceptions;''')
             db.execute('''
-                create view if not exists flightDataExceptions as 
+                create view flightDataExceptions as 
                     select exc_type, exc_msg, exc_tb, occurances, datetime(ts_first, 'unixepoch'), datetime(ts_last, 'unixepoch')
                     from flightDataExceptionTable 
                         join (select exc_hash, count(*) as occurances, 
                                 min(exc_ts) as ts_first, max(exc_ts) as ts_last
-                            from flightDataExceptionLog2 group by exc_hash)
+                            from flightDataExceptionLog3 group by exc_hash)
                         using (exc_hash)
                     order by exc_type, exc_msg;
                     ''')
@@ -173,7 +170,7 @@ class FlightDataRecorder(object):
                 'insert or ignore into flightDataExceptionTable\n'
                 '  values (:exc_hash, :exc_hashPartial, :exc_type, :exc_msg, :exc_tb)', rec)
             db.execute(
-                'insert into flightDataExceptionLog2\n'
+                'insert into flightDataExceptionLog3\n'
                 '  values (:node, :exc_hash, :exc_ts, :exc_ts0)', rec)
 
         return self._next_excepthook(etype, evalue, etb)
