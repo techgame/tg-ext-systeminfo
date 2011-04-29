@@ -88,6 +88,10 @@ class FlightDataRecorder(object):
         try:
             with db:
                 yield db
+        except Exception:
+            import traceback
+            traceback.print_exc(file=sys.stderr)
+            print >> sys.stderr, "  Error occured during flight data recorder exception capture"
         finally:
             db.close()
 
@@ -104,6 +108,13 @@ class FlightDataRecorder(object):
                     key TEXT,
                     value TEXT,
                     primary key (nodeId, key) on conflict replace);''')
+            db.execute('''
+                create table if not exists flightDataExceptionTable (
+                    exc_hash TEXT primary key on conflict ignore, 
+                    exc_hashPartial TEXT,
+                    exc_type TEXT,
+                    exc_msg TEXT,
+                    exc_tb TEXT);''')
             db.execute('''
                 create table if not exists flightDataExceptionLog3 (
                     nodeId INTEGER,
