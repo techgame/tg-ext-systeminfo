@@ -97,6 +97,9 @@ class FlightDataRecorder(object):
 
     def _initSqliteDb(self, db):
         db.row_factory = sqlite3.Row
+        db.execute('PRAGMA synchronous = NORMAL;')
+        db.execute('PRAGMA temp_store = MEMORY;')
+        db.execute('PRAGMA encoding = "UTF-8";')
         r = db.execute('PRAGMA database_list;').fetchone()
         self.dbname = r[2]
 
