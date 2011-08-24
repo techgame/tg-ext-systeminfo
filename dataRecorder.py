@@ -15,6 +15,7 @@ from __future__ import with_statement
 import os, sys
 import uuid
 import sqlite3
+import traceback
 from contextlib import contextmanager
 
 from . import gatherSystemInfo
@@ -179,13 +180,16 @@ class FlightDataRecorder(object):
         #print >> sys.stderr, tde
 
         rec = tde.getJsonExceptionRecord(node=self.nodeid)
-        with self.usingDB() as db:
-            db.execute(
-                'insert or ignore into flightDataExceptionTable\n'
-                '  values (:exc_hash, :exc_hashPartial, :exc_type, :exc_msg, :exc_tb)', rec)
-            db.execute(
-                'insert into flightDataExceptionLog3\n'
-                '  values (:node, :exc_hash, :exc_ts, :exc_ts0)', rec)
+        try:
+            with self.usingDB() as db:
+                db.execute(
+                    'insert or ignore into flightDataExceptionTable\n'
+                    '  values (:exc_hash, :exc_hashPartial, :exc_type, :exc_msg, :exc_tb)', rec)
+                db.execute(
+                    'insert into flightDataExceptionLog3\n'
+                    '  values (:node, :exc_hash, :exc_ts, :exc_ts0)', rec)
+        except Exception:
+            traceback.print_exc()
 
         return self._next_excepthook(etype, evalue, etb)
 
