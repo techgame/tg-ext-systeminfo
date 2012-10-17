@@ -12,7 +12,7 @@
 
 from __future__ import with_statement
 
-import os, sys
+import os, sys, atexit
 import uuid
 import sqlite3
 import traceback
@@ -91,7 +91,7 @@ class FlightDataRecorder(object):
                 yield db
         except Exception:
             import traceback
-            traceback.print_exc(file=sys.stderr)
+            self.print_exc(file=sys.stderr)
             print >> sys.stderr, "  Error occured during flight data recorder exception capture"
         finally:
             db.close()
@@ -159,6 +159,7 @@ class FlightDataRecorder(object):
 
         self._next_excepthook = sys.excepthook
         sys.excepthook = self.exceptHook
+        atexit.register(lambda: setattr(sys, 'excepthook', self._next_excepthook))
 
     def addSystemInfo(self):
         si = self._gatherSystemInfo()
@@ -174,8 +175,12 @@ class FlightDataRecorder(object):
 
     _gatherSystemInfo = staticmethod(gatherSystemInfo)
     _iterFlatNS = staticmethod(iterFlatNS)
+    print_exc = staticmethod(traceback.print_exc)
 
     def exceptHook(self, etype, evalue, etb):
+        if TracebackDataEntry is None:
+            return self.print_exc()
+
         tde = TracebackDataEntry(etype, evalue, etb)
         #print >> sys.stderr, tde
 
@@ -189,7 +194,7 @@ class FlightDataRecorder(object):
                     'insert into flightDataExceptionLog3\n'
                     '  values (:node, :exc_hash, :exc_ts, :exc_ts0)', rec)
         except Exception:
-            traceback.print_exc()
+            self.print_exc()
 
         return self._next_excepthook(etype, evalue, etb)
 
